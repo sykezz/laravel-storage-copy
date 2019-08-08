@@ -1,0 +1,31 @@
+{
+    "name": "sykez/laravel-storage-copy",
+	"description": "Simple Artisan command for copying files between Laravel Filesystem/Storage disks.",
+	"license": "MIT",
+	"keywords": ["laravel", "filesystem", "storage", "file", "copy", "sync", "migrate", "s3"],
+	"homepage": "https://github.com/sykezz/laravel-storage-copy",
+    "authors": [
+        {
+            "name": "sykez",
+            "email": "hello@sykez.com"
+        }
+	],
+	"minimum-stability": "dev",
+	"require": {
+		"php": "^7.2",
+		"league/flysystem": "~1.0",
+		"illuminate/console": "^5.7"
+	},
+	"autoload": {
+        "psr-4": {
+            "Sykez\\StorageCopy\\": "src/"
+        }
+    },
+	"extra": {
+        "laravel": {
+            "providers": [
+                "Sykez\\StorageCopy\\ServiceProvider"
+            ]
+        }
+    }
+}
