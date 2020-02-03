@@ -24,7 +24,7 @@ class ServiceProvider extends BaseServiceProvider
     public function boot()
     {
         if ($this->app->runningInConsole()) {
-			$this->commands([StorageCopyCommand::class]);
-		}
+            $this->commands([StorageCopyCommand::class]);
+        }
     }
 }
