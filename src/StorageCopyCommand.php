@@ -14,9 +14,9 @@ class StorageCopyCommand extends Command
      * @var string
      */
     protected $signature = 'storage:copy
-							{source : Name of the Filesystem disk you want to copy from}
-							{destination : Name of the Filesystem disk you want to copy to}
-							{--d|delete : Delete files on destination disk which aren\'t on the source disk}
+                            {source : Name of the Filesystem disk you want to copy from}
+                            {destination : Name of the Filesystem disk you want to copy to}
+                            {--d|delete : Delete files on destination disk which aren\'t on the source disk}
                             {--o|overwrite : If files already exist on destination disk, overwrite them instead of skip}
                             {--l|log : Log all actions into Laravel log}
                             {--O|output : Output all actions}';
@@ -81,8 +81,15 @@ class StorageCopyCommand extends Command
                     Storage::disk($destination)->put($file, $content, $visibility);
                     $this->countOutputLog('copied', $file);
                 } else { // Skip file
+                    Storage::disk($destination)->setVisibility($file, 'public');
                     $this->countOutputLog('skipped', $file);
                 }
+            } else {
+                // File does not exist on destination, so copy
+                $visibility = Storage::disk($source)->getVisibility($file);
+                $content = Storage::disk($source)->get($file);
+                Storage::disk($destination)->put($file, $content, $visibility);
+                $this->countOutputLog('copied', $file);
             }
             
             $progress->advance();
