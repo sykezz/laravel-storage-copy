@@ -16,6 +16,7 @@ class StorageCopyCommand extends Command
     protected $signature = 'storage:copy
                             {source : Name of the Filesystem disk you want to copy from}
                             {destination : Name of the Filesystem disk you want to copy to}
+                            {filespec=. : file spec}
                             {--d|delete : Delete files on destination disk which aren\'t on the source disk}
                             {--o|overwrite : If files already exist on destination disk, overwrite them instead of skip}
                             {--l|log : Log all actions into Laravel log}
@@ -72,13 +73,22 @@ class StorageCopyCommand extends Command
         }
 
         foreach ($sourceFiles as $file) {
+            if (!preg_match( '#'. $this->argument('filespec') .'#', $file)) {
+                continue;
+            }
+
             // If file already exists in destination
+            $mime_type = Storage::disk($source)->getMimeType($file);
+            if (strpos($file, '.css') !== false) { $mime_type = 'text/css'        ; }
+            if (strpos($file, '.js' ) !== false) { $mime_type = 'text/javascript' ; }
+            if (strpos($file, '.svg') !== false) { $mime_type = 'image/svg+xml'   ; }
             if (in_array($file, $destinationFiles)) {
                 // Overwrite file if argument is present
                 if ($this->option('overwrite')) {
                     $visibility = Storage::disk($source)->getVisibility($file);
+                    $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
                     $content = Storage::disk($source)->get($file);
-                    Storage::disk($destination)->put($file, $content, $visibility);
+                    Storage::disk($destination)->getDriver()->put($file, $content, $options);
                     $this->countOutputLog('copied', $file);
                 } else { // Skip file
                     Storage::disk($destination)->setVisibility($file, 'public');
@@ -88,7 +98,8 @@ class StorageCopyCommand extends Command
                 // File does not exist on destination, so copy
                 $visibility = Storage::disk($source)->getVisibility($file);
                 $content = Storage::disk($source)->get($file);
-                Storage::disk($destination)->put($file, $content, $visibility);
+                $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
+                Storage::disk($destination)->getDriver()->put($file, $content, $options);
                 $this->countOutputLog('copied', $file);
             }
             
