@@ -19,6 +19,7 @@ class StorageCopyCommand extends Command
                             {filespec=. : file spec}
                             {--d|delete : Delete files on destination disk which aren\'t on the source disk}
                             {--o|overwrite : If files already exist on destination disk, overwrite them instead of skip}
+                            {--nv|novisibility : Skip getting visibilty on the source}
                             {--l|log : Log all actions into Laravel log}
                             {--O|output : Output all actions}';
 
@@ -85,7 +86,7 @@ class StorageCopyCommand extends Command
             if (in_array($file, $destinationFiles)) {
                 // Overwrite file if argument is present
                 if ($this->option('overwrite')) {
-                    $visibility = Storage::disk($source)->getVisibility($file);
+                    $visibility = $this->option('novisibility') ? null : Storage::disk($source)->getVisibility($file);
                     $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
                     $content = Storage::disk($source)->get($file);
                     Storage::disk($destination)->getDriver()->put($file, $content, $options);
@@ -96,7 +97,7 @@ class StorageCopyCommand extends Command
                 }
             } else {
                 // File does not exist on destination, so copy
-                $visibility = Storage::disk($source)->getVisibility($file);
+                $visibility = $this->option('novisibility') ? null : Storage::disk($source)->getVisibility($file);
                 $content = Storage::disk($source)->get($file);
                 $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
                 Storage::disk($destination)->getDriver()->put($file, $content, $options);
