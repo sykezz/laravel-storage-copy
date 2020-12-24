@@ -16,10 +16,11 @@ class StorageCopyCommand extends Command
     protected $signature = 'storage:copy
                             {source : Name of the Filesystem disk you want to copy from}
                             {destination : Name of the Filesystem disk you want to copy to}
-                            {filespec=. : file spec}
+                            {filespec=. : File specification for filtering the list of files}
                             {--d|delete : Delete files on destination disk which aren\'t on the source disk}
                             {--o|overwrite : If files already exist on destination disk, overwrite them instead of skip}
                             {--nv|novisibility : Skip getting visibilty on the source}
+                            {--x|exclude= : Regex filter for excluding files}
                             {--l|log : Log all actions into Laravel log}
                             {--O|output : Output all actions}';
 
@@ -30,8 +31,8 @@ class StorageCopyCommand extends Command
      */
     protected $description = 'Copy files between Laravel Filesystem/Storage disks. By default, existing files will be skipped.';
 
-    protected $log = [];
-    protected $count = ['copied' => 0, 'skipped' => 0, 'deleted' => 0];
+    protected $log         = [];
+    protected $count       = ['copied' => 0, 'skipped' => 0, 'deleted' => 0, 'excluded' => 0];
 
     /**
      * Create a new command instance.
@@ -74,7 +75,14 @@ class StorageCopyCommand extends Command
         }
 
         foreach ($sourceFiles as $file) {
+            // Skip files not matching the inclusion filespec
             if (!preg_match( '#'. $this->argument('filespec') .'#', $file)) {
+                $this->countOutputLog('excluded', $file);
+                continue;
+            }
+            // Skip files matching the exclusion filespec
+            if (!empty($this->option('exclude')) && preg_match( '#'. $this->option('exclude') .'#', $file)) {
+                $this->countOutputLog('excluded', $file);
                 continue;
             }
 
@@ -108,7 +116,7 @@ class StorageCopyCommand extends Command
         }
 
         $progress->finish();
-        $this->info("\nDone! {$this->count['copied']} files copied, {$this->count['skipped']} files skipped, {$this->count['deleted']} files deleted.");
+        $this->info("\nDone! {$this->count['copied']} files copied, {$this->count['skipped']} files skipped, {$this->count['deleted']} files deleted, {$this->count['excluded']} files excluded.");
     }
 
     public function countOutputLog($action, $file)
