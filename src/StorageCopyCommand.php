@@ -14,10 +14,13 @@ class StorageCopyCommand extends Command
      * @var string
      */
     protected $signature = 'storage:copy
-							{source : Name of the Filesystem disk you want to copy from}
-							{destination : Name of the Filesystem disk you want to copy to}
-							{--d|delete : Delete files on destination disk which aren\'t on the source disk}
+                            {source : Name of the Filesystem disk you want to copy from}
+                            {destination : Name of the Filesystem disk you want to copy to}
+                            {filespec=. : File specification for filtering the list of files}
+                            {--d|delete : Delete files on destination disk which aren\'t on the source disk}
                             {--o|overwrite : If files already exist on destination disk, overwrite them instead of skip}
+                            {--nv|novisibility : Skip getting visibilty on the source}
+                            {--x|exclude= : Regex filter for excluding files}
                             {--l|log : Log all actions into Laravel log}
                             {--O|output : Output all actions}';
 
@@ -28,8 +31,8 @@ class StorageCopyCommand extends Command
      */
     protected $description = 'Copy files between Laravel Filesystem/Storage disks. By default, existing files will be skipped.';
 
-    protected $log = [];
-    protected $count = ['copied' => 0, 'skipped' => 0, 'deleted' => 0];
+    protected $log         = [];
+    protected $count       = ['copied' => 0, 'skipped' => 0, 'deleted' => 0, 'excluded' => 0];
 
     /**
      * Create a new command instance.
@@ -72,24 +75,48 @@ class StorageCopyCommand extends Command
         }
 
         foreach ($sourceFiles as $file) {
+            // Skip files not matching the inclusion filespec
+            if (!preg_match( '#'. $this->argument('filespec') .'#', $file)) {
+                $this->countOutputLog('excluded', $file);
+                continue;
+            }
+            // Skip files matching the exclusion filespec
+            if (!empty($this->option('exclude')) && preg_match( '#'. $this->option('exclude') .'#', $file)) {
+                $this->countOutputLog('excluded', $file);
+                continue;
+            }
+
             // If file already exists in destination
+            $mime_type = Storage::disk($source)->getMimeType($file);
+            if (strpos($file, '.css') !== false) { $mime_type = 'text/css'        ; }
+            if (strpos($file, '.js' ) !== false) { $mime_type = 'text/javascript' ; }
+            if (strpos($file, '.svg') !== false) { $mime_type = 'image/svg+xml'   ; }
             if (in_array($file, $destinationFiles)) {
                 // Overwrite file if argument is present
                 if ($this->option('overwrite')) {
-                    $visibility = Storage::disk($source)->getVisibility($file);
+                    $visibility = $this->option('novisibility') ? null : Storage::disk($source)->getVisibility($file);
+                    $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
                     $content = Storage::disk($source)->get($file);
-                    Storage::disk($destination)->put($file, $content, $visibility);
+                    Storage::disk($destination)->getDriver()->put($file, $content, $options);
                     $this->countOutputLog('copied', $file);
                 } else { // Skip file
+                    Storage::disk($destination)->setVisibility($file, 'public');
                     $this->countOutputLog('skipped', $file);
                 }
+            } else {
+                // File does not exist on destination, so copy
+                $visibility = $this->option('novisibility') ? null : Storage::disk($source)->getVisibility($file);
+                $content = Storage::disk($source)->get($file);
+                $options = [ 'visibility'  => $visibility, 'ContentType' => $mime_type ];
+                Storage::disk($destination)->getDriver()->put($file, $content, $options);
+                $this->countOutputLog('copied', $file);
             }
             
             $progress->advance();
         }
 
         $progress->finish();
-        $this->info("\nDone! {$this->count['copied']} files copied, {$this->count['skipped']} files skipped, {$this->count['deleted']} files deleted.");
+        $this->info("\nDone! {$this->count['copied']} files copied, {$this->count['skipped']} files skipped, {$this->count['deleted']} files deleted, {$this->count['excluded']} files excluded.");
     }
 
     public function countOutputLog($action, $file)

@@ -5,7 +5,7 @@ Laravel Artisan command for copying files between Laravel Filesystem/Storage dis
 ## Install
 
 ```
-composer require sykez/laravel-storage-copy
+composer require edwardcaret/laravel-storage-copy
 ```
 
 ## Usage
@@ -26,6 +26,8 @@ destination           Name of the Filesystem disk you want to copy to
 ```
 -d, --delete          Delete files on destination disk which aren't on the source disk
 -o, --overwrite       If files already exist on destination disk, overwrite them instead of skip
+-nv, --novisibility   Skip getting visibilty on the source
+-x, --exclude         Regex filter for excluding files
 -l, --log             Log all actions into Laravel log
 -O, --output          Output all actions
 ```
