@@ -111,7 +111,7 @@ class StorageCopyCommand extends Command
                 Storage::disk($destination)->getDriver()->put($file, $content, $options);
                 $this->countOutputLog('copied', $file);
             }
-            
+
             $progress->advance();
         }
 
@@ -125,11 +125,11 @@ class StorageCopyCommand extends Command
         $this->log[$action][] = $file;
 
         if ($this->option('output')) {
-            $this->info("\n".strtoupper($action).": $file");
+            $this->info("\n" . strtoupper($action) . ": $file");
         }
 
         if ($this->option('log')) {
-            Log::debug(strtoupper($action).": $file");
+            Log::debug(strtoupper($action) . ": $file");
         }
     }
 }
