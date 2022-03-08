@@ -1,5 +1,5 @@
 {
-    "name": "edwardcaret/laravel-storage-copy",
+    "name": "sykez/laravel-storage-copy",
     "description": "Laravel Artisan command for copying files between Laravel Filesystem/Storage disks.",
     "license": "MIT",
     "keywords": [
@@ -13,15 +13,11 @@
         "migrate",
         "s3"
     ],
-    "homepage": "https://github.com/edwardcaret/laravel-storage-copy",
+    "homepage": "https://github.com/sykezz/laravel-storage-copy",
     "authors": [
         {
             "name": "sykez",
             "email": "hello@sykez.com"
-        },
-        {
-            "name": "edwardcaret",
-            "email": "edward@caret.net"
         }
     ],
     "minimum-stability": "dev",

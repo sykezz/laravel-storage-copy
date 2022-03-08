@@ -5,7 +5,7 @@ Laravel Artisan command for copying files between Laravel Filesystem/Storage dis
 ## Install
 
 ```
-composer require edwardcaret/laravel-storage-copy
+composer require sykez/laravel-storage-copy
 ```
 
 ## Usage
